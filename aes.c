@@ -1,4 +1,15 @@
-
+/*
+ *
+ * Chinese Academy of Sciences
+ * State Key Laboratory of Information Security
+ * Institute of Information Engineering
+ *
+ * Copyright (C) 2016 Chinese Academy of Sciences
+ *
+ * LuoPeng, luopeng@iie.ac.cn
+ * Updated in May 2016
+ *
+ */
 #include <stdint.h>
 #include <stdio.h>
 
@@ -6,6 +17,12 @@
 
 /* --------------------------------------------------------------------------------------------------- */
 /* Const Values -------------------------------------------------------------------------------------- */
+
+/*
+ * round constants
+ */
+static uint8_t RC[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
+
 /*
  * S-box transformation table
  */
@@ -47,11 +64,6 @@ static uint8_t INV_SBOX[256] = {
 	0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
 	0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
 	0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d};
-
-/*
- * round constants
- */
-static uint8_t RC[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
 /* Const Values End ---------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------------------------- */
 
@@ -60,7 +72,7 @@ static uint8_t RC[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x3
 /* --------------------------------------------------------------------------------------------------- */
 /* Static Functions ---------------------------------------------------------------------------------- */
 
-/* 
+/**
  * https://en.wikipedia.org/wiki/Finite_field_arithmetic
  *
  * Multiply two numbers in the GF(2^8) finite field defined by the polynomial x^8 + x^4 + x^3 + x + 1 = 0

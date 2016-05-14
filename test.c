@@ -1,3 +1,15 @@
+/*
+ *
+ * Chinese Academy of Sciences
+ * State Key Laboratory of Information Security
+ * Institute of Information Engineering
+ *
+ * Copyright (C) 2016 Chinese Academy of Sciences
+ *
+ * LuoPeng, luopeng@iie.ac.cn
+ * Updated in May 2016
+ *
+ */
 
 #include <stdio.h>
 
@@ -16,7 +28,7 @@ int main(int argc, char *argv[]) {
 		0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
 		0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10};
 	
-	uint8_t roundkeys[KEY_SIZE_BYTE*(ROUNDS+1)];
+	uint8_t roundkeys[ROUND_KEY_SIZE];
 
 	printf("\n--------------------------------------------------------\n");
 	// key schedule
@@ -33,7 +45,6 @@ int main(int argc, char *argv[]) {
 
 	// encryption
 	encrypt(plain, roundkeys);
-
 	printf("Cipher text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
 		printf("%2x ", plain[i]);
@@ -43,7 +54,6 @@ int main(int argc, char *argv[]) {
 
 	// decryption
 	decrypt(plain, roundkeys);
-
 	printf("Plain text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
 		printf("%2x ", plain[i]);

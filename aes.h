@@ -1,11 +1,22 @@
-
+/*
+ *
+ * Chinese Academy of Sciences
+ * State Key Laboratory of Information Security
+ * Institute of Information Engineering
+ *
+ * Copyright (C) 2016 Chinese Academy of Sciences
+ *
+ * LuoPeng, luopeng@iie.ac.cn
+ * Updated in May 2016
+ *
+ */
 #ifndef AES
 #define AES
 
-#include<stdint.h>
+#include <stdio.h>
+#include <stdint.h>
 
 #define BLOCK_SIZE_BYTE	16
-#define KEY_SIZE_BYTE	16 // 24, 32
 #define ROUNDS		10 // 12, 14
 #define ROUND_KEY_SIZE	176 // AES-128 has 10 rounds, and there is a AddRoundKey before first round. (10+1)x16=176.
 
