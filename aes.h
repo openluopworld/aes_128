@@ -7,30 +7,26 @@
 #define BLOCK_SIZE_BYTE	16
 #define KEY_SIZE_BYTE	16 // 24, 32
 #define ROUNDS		10 // 12, 14
+#define ROUND_KEY_SIZE	176 // AES-128 has 10 rounds, and there is a AddRoundKey before first round. (10+1)x16=176.
 
-//typedef	uint8_t	  = uint8_t
-//typedef uint16_t  = uint16_t
-//typedef uint32_t  = u32
-//typedef uint64_t  = uint64_t
-
-/*
- * Key schedule
- * key: master keys
- * roundkeys: round keys
+/**
+ * @purpose:		Key schedule for AES-128
+ * @par[in]key:		16 bytes of master keys
+ * @par[out]roundkeys:	176 bytes of round keys
  */
 void key_expansion(const uint8_t *key, uint8_t *roundkeys);
 
-/*
- * Encryption: Only one block is encrypted. After encryption, cipher text will override plain text.
- * plain: plain text
- * roundkeys: round keys
+/**
+ * @purpose:		Encryption. Only one block is encrypted. After encryption, cipher text will override plain text.
+ * @par[in/out]plain:	plain text and cipher text
+ * @par[in]roundkeys:	round keys
  */
 void encrypt(uint8_t *plain, const uint8_t *roundkeys);
 
-/*
- * Decryption: Only one block is decrypted. After decrypiton, plain text will override cipher text
- * cipher: cipher text
- * roundkeys: round keys
+/**
+ * @purpose:		Decryption. Only one block is decrypted. After decrypiton, plain text will override cipher text
+ * @par[in/out]cipher:	cipher text
+ * @par[in]roundkeys:	round keys
  */
 void decrypt(uint8_t *cipher, const uint8_t *roundkeys);
 
