@@ -6,13 +6,13 @@ C implementation of AES-128.<br><br>
 /**
  * Key schedule for AES-128
  */
-void key_schedule(const uint8_t *key, uint8_t *roundkeys);
+void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys);
 /**
- * Encryption. Only one block is encrypted. After encryption, cipher text will override plain text.
+ * Encryption. Only one block is encrypted.
  */
-void encrypt(uint8_t *plain, const uint8_t *roundkeys);
+void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plain, uint8_t *cipher);
 /**
- * Decryption. Only one block is decrypted. After decrypiton, plain text will override cipher text.
+ * Decryption. Only one block is decrypted.
  */
-void decrypt(uint8_t *cipher, const uint8_t *roundkeys);
+void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *cipher, uint8_t *plain);
 ```

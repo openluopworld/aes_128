@@ -249,12 +249,7 @@ static void inv_sbox(uint8_t *state) {
 
 /* --------------------------------------------------------------------------------------------------- */
 /* Public Interface ---------------------------------------------------------------------------------- */
-/**
- * @purpose:		Key schedule for AES-128
- * @par[in]key:		16 bytes of master keys
- * @par[out]roundkeys:	176 bytes of round keys
- */
-void key_schedule(const uint8_t *key, uint8_t *roundkeys) {
+void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys) {
 
 	uint8_t temp[4];
 	uint8_t *last4bytes; // point to the last 4 bytes of one round
@@ -299,58 +294,56 @@ void key_schedule(const uint8_t *key, uint8_t *roundkeys) {
 	}
 }
 
-/**
- * @purpose:		Encryption. Only one block is encrypted. After encryption, cipher text will override plain text.
- * @par[in/out]plain:	plain text and cipher text
- * @par[in]roundkeys:	round keys
- */
-void encrypt(uint8_t *plain, const uint8_t *roundkeys) {
+void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plain, uint8_t *cipher) {
 
 	uint8_t i;
 
+	for ( i = 0; i < BLOCK_SIZE_BYTE; i++ ) {
+		cipher[i] = plain[i];
+	}
+
 	// first key eor
-	add_round_key(plain, roundkeys);
+	add_round_key(cipher, roundkeys);
 	roundkeys += 16;
 
 	// 9 rounds
 	for (i = 1; i < ROUNDS; i++) {
-		sbox(plain);
-		shift_rows(plain);
-		mix_columns(plain);
-		add_round_key(plain, roundkeys);
+		sbox(cipher);
+		shift_rows(cipher);
+		mix_columns(cipher);
+		add_round_key(cipher, roundkeys);
 		roundkeys += 16;
 	}
 	
 	// last round
-	sbox(plain);
-	shift_rows(plain);
-	add_round_key(plain, roundkeys);
+	sbox(cipher);
+	shift_rows(cipher);
+	add_round_key(cipher, roundkeys);
 }
 
-/*
- * Decryption: Only one block is decrypted. After decrypiton, plain text will override cipher text
- * cipher: cipher text
- * roundkeys: round keys
- */
-void decrypt(uint8_t *cipher, const uint8_t *roundkeys) {
+void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *cipher, uint8_t *plain) {
 
 	uint8_t i;
 
+	for ( i = 0; i < BLOCK_SIZE_BYTE; i++ ) {
+		plain[i] = cipher[i];
+	}
+
 	roundkeys += 160;
-	add_round_key(cipher, roundkeys);
+	add_round_key(plain, roundkeys);
 	roundkeys -= 16;
 
 	for (i = 1; i < ROUNDS; i++) {
-		inv_shift_rows(cipher);
-		inv_sbox(cipher);
-		add_round_key(cipher, roundkeys);
+		inv_shift_rows(plain);
+		inv_sbox(plain);
+		add_round_key(plain, roundkeys);
 		roundkeys -= 16;
-		inv_mix_columns(cipher);
+		inv_mix_columns(plain);
 	}
 
-	inv_shift_rows(cipher);
-	inv_sbox(cipher);
-	add_round_key(cipher, roundkeys);
+	inv_shift_rows(plain);
+	inv_sbox(plain);
+	add_round_key(plain, roundkeys);
 }
 /* Public Interface End ------------------------------------------------------------------------------ */
 /* --------------------------------------------------------------------------------------------------- */

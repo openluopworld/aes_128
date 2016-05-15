@@ -27,12 +27,14 @@ int main(int argc, char *argv[]) {
 	uint8_t plain[] = {
 		0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
 		0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10};
+
+	uint8_t cipher[BLOCK_SIZE_BYTE];
 	
 	uint8_t roundkeys[ROUND_KEY_SIZE];
 
 	printf("\n--------------------------------------------------------\n");
 	// key schedule
-	key_schedule(key, roundkeys);
+	aes_key_schedule_128(key, roundkeys);
 	printf("Key:\n");
 	for ( r = 0; r <= ROUNDS; r++ ) {
 		for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
@@ -45,16 +47,16 @@ int main(int argc, char *argv[]) {
 
 	// encryption
 	// cipher text should be: 0x ff  b 84 4a  8 53 bf 7c 69 34 ab 43 64 14 8f b9
-	encrypt(plain, roundkeys);
+	aes_encrypt_128(roundkeys, plain, cipher);
 	printf("Cipher text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		printf("%2x ", plain[i]);
+		printf("%2x ", cipher[i]);
 	}
 	printf("\n\n");
 
 
 	// decryption
-	decrypt(plain, roundkeys);
+	aes_decrypt_128(roundkeys, cipher, plain);
 	printf("Plain text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
 		printf("%2x ", plain[i]);

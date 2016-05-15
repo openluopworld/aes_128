@@ -25,20 +25,22 @@
  * @par[in]key:		16 bytes of master keys
  * @par[out]roundkeys:	176 bytes of round keys
  */
-void key_schedule(const uint8_t *key, uint8_t *roundkeys);
+void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys);
 
 /**
- * @purpose:		Encryption. Only one block is encrypted. After encryption, cipher text will override plain text.
- * @par[in/out]plain:	plain text and cipher text
+ * @purpose:		Encryption. Only one block is encrypted.
  * @par[in]roundkeys:	round keys
+ * @par[in]plain:	plain text
+ * @par[out]cipher:	cipher text
  */
-void encrypt(uint8_t *plain, const uint8_t *roundkeys);
+void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plain, uint8_t *cipher);
 
 /**
- * @purpose:		Decryption. Only one block is decrypted. After decrypiton, plain text will override cipher text
- * @par[in/out]cipher:	cipher text
+ * @purpose:		Decryption. Only one block is decrypted.
  * @par[in]roundkeys:	round keys
+ * @par[in]cipher:	cipher text
+ * @par[out]plain:	plain text
  */
-void decrypt(uint8_t *cipher, const uint8_t *roundkeys);
+void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *cipher, uint8_t *plain);
 
 #endif
