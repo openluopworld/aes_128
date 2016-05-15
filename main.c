@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
 	printf("\n--------------------------------------------------------\n");
 	// key schedule
-	key_expansion(key, roundkeys);
+	key_schedule(key, roundkeys);
 	printf("Key:\n");
 	for ( r = 0; r <= ROUNDS; r++ ) {
 		for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
 
 
 	// encryption
+	// cipher text should be: 0x ff  b 84 4a  8 53 bf 7c 69 34 ab 43 64 14 8f b9
 	encrypt(plain, roundkeys);
 	printf("Cipher text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {

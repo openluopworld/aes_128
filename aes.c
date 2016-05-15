@@ -221,8 +221,14 @@ static void inv_shift_rows(uint8_t *state) {
 static void sbox(uint8_t *state) {
 	uint8_t i;
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		// The following sentence is wrong, but do you know the reason?
-		// *state++ = SBOX[*state];
+		/*
+		 * The following sentence is wrong, but do you know the reason?
+		 * *state++ = SBOX[*state];
+		 * 
+		 * The priority of ' postfix-expression ++ ' is higher than *
+		 * Another expression is also wrong.
+		 * *state = SBOX[*state++];
+		 */
 		*(state+i) = SBOX[*(state+i)];
 	}
 }
@@ -248,7 +254,7 @@ static void inv_sbox(uint8_t *state) {
  * @par[in]key:		16 bytes of master keys
  * @par[out]roundkeys:	176 bytes of round keys
  */
-void key_expansion(const uint8_t *key, uint8_t *roundkeys) {
+void key_schedule(const uint8_t *key, uint8_t *roundkeys) {
 
 	uint8_t temp[4];
 	uint8_t *last4bytes; // point to the last 4 bytes of one round

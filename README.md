@@ -1,4 +1,5 @@
 ### AES-128
-AES-128 implementation<br>
+
+C implementation of AES-128.<br>
 
 

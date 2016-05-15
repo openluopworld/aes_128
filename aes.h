@@ -25,7 +25,7 @@
  * @par[in]key:		16 bytes of master keys
  * @par[out]roundkeys:	176 bytes of round keys
  */
-void key_expansion(const uint8_t *key, uint8_t *roundkeys);
+void key_schedule(const uint8_t *key, uint8_t *roundkeys);
 
 /**
  * @purpose:		Encryption. Only one block is encrypted. After encryption, cipher text will override plain text.
