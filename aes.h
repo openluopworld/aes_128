@@ -28,7 +28,7 @@
 void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys);
 
 /**
- * @purpose:		Encryption. Only one block is encrypted.
+ * @purpose:		Encryption. The length of plain and cipher should be one block (16 bytes).
  * @par[in]roundkeys:	round keys
  * @par[in]plain:	plain text
  * @par[out]cipher:	cipher text
@@ -36,7 +36,7 @@ void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys);
 void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plain, uint8_t *cipher);
 
 /**
- * @purpose:		Decryption. Only one block is decrypted.
+ * @purpose:		Decryption. The length of plain and cipher should be one block (16 bytes)
  * @par[in]roundkeys:	round keys
  * @par[in]cipher:	cipher text
  * @par[out]plain:	plain text
