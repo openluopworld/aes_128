@@ -222,12 +222,14 @@ static void sbox(uint8_t *state) {
 	uint8_t i;
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
 		/*
-		 * The following sentence is wrong, but do you know the reason?
+		 * The following sentences are wrong. But do you know the reason?
 		 * *state++ = SBOX[*state];
-		 * 
-		 * The priority of ' postfix-expression ++ ' is higher than *
-		 * Another expression is also wrong.
 		 * *state = SBOX[*state++];
+		 * The priority of ' postfix-expression ++ ' is higher than *.
+		 * 
+		 * <<C Traps and Pitfalls>>, Chapter 3 section 7.
+		 * For "=" operation in C, the computation order is undefined.
+		 * That is to say, we do NOT know whether the left expression or the right expression will be computed first.
 		 */
 		*(state+i) = SBOX[*(state+i)];
 	}
