@@ -16,3 +16,8 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plain, uint8_t *ci
  */
 void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *cipher, uint8_t *plain);
 ```
+
+### TODO
+
+* Add AES-192 and AES-256
+* Give a full test
