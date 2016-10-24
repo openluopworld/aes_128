@@ -199,6 +199,7 @@ static void aes_dec_round(uint8_t *state, const uint8_t *roundkeys) {
 	}
 	
 	// inverse mix columns
+	// this method is from FELICS
 	for (i = 0; i < 4; ++i) {
 		t = tmp[4*i+3] ^ tmp[4*i+2];
 		u = tmp[4*i+1] ^ tmp[4*i+0];
