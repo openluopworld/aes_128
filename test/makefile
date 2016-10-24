@@ -1,5 +1,6 @@
+IDIR=./../include
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -I$(IDIR)
 
 aes.out: main.o aes.o
 	$(CC) -o $@ $^ $(CFLAGS)
