@@ -7,7 +7,7 @@
  * Copyright (C) 2016 Chinese Academy of Sciences
  *
  * LuoPeng, luopeng@iie.ac.cn
- * Updated in May 2016
+ * Updated in Oct 2016
  *
  */
 #include <stdint.h>
@@ -96,64 +96,6 @@ static uint8_t mul(uint8_t a, uint8_t b) {
 }
 
 /**
- * @purpose:	key eor
- */
-static void add_round_key(uint8_t *state, const uint8_t *roundkeys) {
-	uint8_t i = 0;
-	for ( i = 0; i < BLOCK_SIZE_BYTE; i++ ) {
-		*(state+i) ^= *(roundkeys+i);
-	}
-}
-
-/**
- * @purpose:	MixColumns 
- * [02 03 01 01]   [s0  s4  s8  s12]
- * [01 02 03 01] . [s1  s5  s9  s13]
- * [01 01 02 03]   [s2  s6  s10 s14]
- * [03 01 01 02]   [s3  s7  s11 s15]
- */
-static void mix_columns(uint8_t *state) {
-
-	uint8_t col, temp[4];
-
-	// For each column, the computation is the same.
-	for (col = 0; col < 4; col++) {
-		temp[0] = state[4*col+0];
-		temp[1] = state[4*col+1];
-		temp[2] = state[4*col+2];
-		temp[3] = state[4*col+3];
-		state[4*col+0] = mul(temp[0], 2) ^ mul(temp[1], 3) ^ temp[2]         ^ temp[3];
-		state[4*col+1] = temp[0]         ^ mul(temp[1], 2) ^ mul(temp[2], 3) ^ temp[3];
-		state[4*col+2] = temp[0]         ^ temp[1]         ^ mul(temp[2], 2) ^ mul(temp[3], 3);
-		state[4*col+3] = mul(temp[0], 3) ^ temp[1]         ^ temp[2]         ^ mul(temp[3], 2);
-	}
-}
-
-/**
- * @purpose:	Inverse MixColumns 
- * [0e 0b 0d 09]   [s0  s4  s8  s12]
- * [09 0e 0b 0d] . [s1  s5  s9  s13]
- * [0d 09 0e 0b]   [s2  s6  s10 s14]
- * [0b 0d 09 0e]   [s3  s7  s11 s15]
- */
-static void inv_mix_columns(uint8_t *state) {
-
-	uint8_t col, temp[4];
-
-	// For each column, the computation is the same.
-	for (col = 0; col < 4; col++) {
-		temp[0] = state[4*col+0];
-		temp[1] = state[4*col+1];
-		temp[2] = state[4*col+2];
-		temp[3] = state[4*col+3];
-		state[4*col+0] = mul(temp[0], 0x0e) ^ mul(temp[1], 0x0b) ^ mul(temp[2], 0x0d) ^ mul(temp[3], 0x09);
-		state[4*col+1] = mul(temp[0], 0x09) ^ mul(temp[1], 0x0e) ^ mul(temp[2], 0x0b) ^ mul(temp[3], 0x0d);
-		state[4*col+2] = mul(temp[0], 0x0d) ^ mul(temp[1], 0x09) ^ mul(temp[2], 0x0e) ^ mul(temp[3], 0x0b);
-		state[4*col+3] = mul(temp[0], 0x0b) ^ mul(temp[1], 0x0d) ^ mul(temp[2], 0x09) ^ mul(temp[3], 0x0e);
-	}
-}
-
-/**
  * @purpose:	ShiftRow
  * @descrption:
  * 	Row0: s0  s4  s8  s12   <<< 0 byte
@@ -215,34 +157,71 @@ static void inv_shift_rows(uint8_t *state) {
 	*(state+15) = temp;
 }
 
-/**
- * @purpose:	sbox
- */
-static void sbox(uint8_t *state) {
+static void aes_enc_round(uint8_t *state, const uint8_t *roundkeys) {
+
+	uint8_t tmp[16], t;
 	uint8_t i;
-	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		/*
-		 * The following sentences are wrong. But do you know the reason?
-		 * *state++ = SBOX[*state];
-		 * *state = SBOX[*state++];
-		 * The priority of ' postfix-expression ++ ' is higher than *.
-		 * 
-		 * <<C Traps and Pitfalls>>, Chapter 3 section 7.
-		 * For "=" operation in C, the computation order is undefined.
-		 * That is to say, we do NOT know whether the left expression or the right expression will be computed first.
-		 */
-		*(state+i) = SBOX[*(state+i)];
+
+	shift_rows(state);
+	for (i = 0; i < BLOCK_SIZE_BYTE; ++i) {
+		*(tmp+i) = SBOX[*(state+i)];
+	}
+	/*
+	 * mix columns 
+	 * [02 03 01 01]   [s0  s4  s8  s12]
+	 * [01 02 03 01] . [s1  s5  s9  s13]
+	 * [01 01 02 03]   [s2  s6  s10 s14]
+	 * [03 01 01 02]   [s3  s7  s11 s15]
+	 */
+	for (i = 0; i < 4; ++i)  {
+		t = tmp[4*i+0] ^ tmp[4*i+1] ^ tmp[4*i+2] ^ tmp[4*i+3];
+		state[4*i+0] = mul(tmp[4*i+0] ^ tmp[4*i+1], 2) ^ tmp[4*i+0] ^ t;
+		state[4*i+1] = mul(tmp[4*i+1] ^ tmp[4*i+2], 2) ^ tmp[4*i+1] ^ t;
+		state[4*i+2] = mul(tmp[4*i+2] ^ tmp[4*i+3], 2) ^ tmp[4*i+2] ^ t;
+		state[4*i+3] = mul(tmp[4*i+3] ^ tmp[4*i+0], 2) ^ tmp[4*i+3] ^ t;
+	}
+
+	// add round keys
+	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+		*(state+i) ^= *(roundkeys+i);
 	}
 }
 
-/**
- * @purpose:	invert sbox
- */
-static void inv_sbox(uint8_t *state) {
+static void aes_dec_round(uint8_t *state, const uint8_t *roundkeys) {
+
+	uint8_t tmp[16];
 	uint8_t i;
+	uint8_t t, u, v, w;
+	
+	// add round keys
+	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+		*(tmp+i) = *(state+i) ^ *(roundkeys+i);
+	}
+	
+	// inverse mix columns
+	// this method is from FELICS
+	for (i = 0; i < 4; ++i) {
+		t = tmp[4*i+3] ^ tmp[4*i+2];
+		u = tmp[4*i+1] ^ tmp[4*i+0];
+		v = t ^ u;
+		v = mul(0x09, v);
+		w = v ^ mul(tmp[4*i+2] ^ tmp[4*i+0], 0x04);
+		v = v ^ mul(tmp[4*i+3] ^ tmp[4*i+1], 0x04);
+		
+		state[4*i+3] = tmp[4*i+3] ^ v ^ mul(tmp[4*i+0] ^ tmp[4*i+3], 0x02);
+		state[4*i+2] = tmp[4*i+2] ^ w ^ mul(t,                       0x02);
+		state[4*i+1] = tmp[4*i+1] ^ v ^ mul(tmp[4*i+2] ^ tmp[4*i+1], 0x02);
+		state[4*i+0] = tmp[4*i+0] ^ w ^ mul(u,                       0x02);
+	}
+	
+	// inverse shift rows
+	inv_shift_rows(state);
+	
+	// inverse sub
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
 		*(state+i) = INV_SBOX[*(state+i)];
 	}
+
 }
 /* Static Functions End ------------------------------------------------------------------------------ */
 /* --------------------------------------------------------------------------------------------------- */
@@ -296,56 +275,66 @@ void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys) {
 	}
 }
 
-void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plain, uint8_t *cipher) {
+void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t *ciphertext) {
 
 	uint8_t i;
 
 	for ( i = 0; i < BLOCK_SIZE_BYTE; i++ ) {
-		cipher[i] = plain[i];
+		ciphertext[i] = plaintext[i];
 	}
 
 	// first key eor
-	add_round_key(cipher, roundkeys);
+	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+		*(ciphertext+i) ^= *(roundkeys+i);
+	}
 	roundkeys += 16;
 
 	// 9 rounds
 	for (i = 1; i < ROUNDS; i++) {
-		sbox(cipher);
-		shift_rows(cipher);
-		mix_columns(cipher);
-		add_round_key(cipher, roundkeys);
+		aes_enc_round(ciphertext, roundkeys);
 		roundkeys += 16;
 	}
 	
 	// last round
-	sbox(cipher);
-	shift_rows(cipher);
-	add_round_key(cipher, roundkeys);
+	for (i = 0; i < BLOCK_SIZE_BYTE; ++i) {
+		*(ciphertext+i) = SBOX[*(ciphertext+i)];
+	}
+	shift_rows(ciphertext);
+	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+		*(ciphertext+i) ^= *(roundkeys+i);
+	}
 }
 
-void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *cipher, uint8_t *plain) {
+void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext) {
 
 	uint8_t i;
 
 	for ( i = 0; i < BLOCK_SIZE_BYTE; i++ ) {
-		plain[i] = cipher[i];
+		plaintext[i] = ciphertext[i];
 	}
 
 	roundkeys += 160;
-	add_round_key(plain, roundkeys);
-	roundkeys -= 16;
 
-	for (i = 1; i < ROUNDS; i++) {
-		inv_shift_rows(plain);
-		inv_sbox(plain);
-		add_round_key(plain, roundkeys);
-		roundkeys -= 16;
-		inv_mix_columns(plain);
+	// first round
+	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+		*(plaintext+i) ^= *(roundkeys+i);
+	}
+	roundkeys -= 16;
+	inv_shift_rows(plaintext);
+	for (i = 0; i < BLOCK_SIZE_BYTE; ++i) {
+		*(plaintext+i) = INV_SBOX[*(plaintext+i)];
 	}
 
-	inv_shift_rows(plain);
-	inv_sbox(plain);
-	add_round_key(plain, roundkeys);
+	for (i = 1; i < ROUNDS; i++) {
+		aes_dec_round(plaintext, roundkeys);
+		roundkeys -= 16;
+	}
+
+	// last add round key
+	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+		*(plaintext+i) ^= *(roundkeys+i);
+	}
+
 }
 /* Public Interface End ------------------------------------------------------------------------------ */
 /* --------------------------------------------------------------------------------------------------- */

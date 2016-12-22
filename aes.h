@@ -1,8 +1,25 @@
-### AES-128
+/*
+ *
+ * Chinese Academy of Sciences
+ * State Key Laboratory of Information Security
+ * Institute of Information Engineering
+ *
+ * Copyright (C) 2016 Chinese Academy of Sciences
+ *
+ * LuoPeng, luopeng@iie.ac.cn
+ * Updated in May 2016
+ *
+ */
+#ifndef AES_128_H
+#define AES_128_H
 
-C implementation of AES-128.<br><br>
+#include <stdio.h>
+#include <stdint.h>
 
-```C
+#define BLOCK_SIZE_BYTE	16
+#define ROUNDS			10	// 12, 14
+#define ROUND_KEY_SIZE	176	// AES-128 has 10 rounds, and there is a AddRoundKey before first round. (10+1)x16=176.
+
 /**
  * @purpose:			Key schedule for AES-128
  * @par[in]key:			16 bytes of master keys
@@ -27,8 +44,5 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
  * @par[out]plaintext:	plain text
  */
 void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext);
-```
 
-### TODO
-
-* Give a full test
+#endif

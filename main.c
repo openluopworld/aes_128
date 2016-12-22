@@ -24,11 +24,11 @@ int main(int argc, char *argv[]) {
 		0x0f, 0x15, 0x71, 0xc9, 0x47, 0xd9, 0xe8, 0x59, 
 		0x0c, 0xb7, 0xad, 0xd6, 0xaf, 0x7f, 0x67, 0x98};
 
-	uint8_t plain[] = {
+	uint8_t plaintext[] = {
 		0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
 		0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10};
  
-	uint8_t cipher[BLOCK_SIZE_BYTE];
+	uint8_t ciphertext[BLOCK_SIZE_BYTE];
 
 	const uint8_t const_cipher[BLOCK_SIZE_BYTE] = {
 		0xff, 0x0b, 0x84, 0x4a, 0x08, 0x53, 0xbf, 0x7c,
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	printf("\n--------------------------------------------------------\n");
 	printf("Plain text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		printf("%2x ", plain[i]);
+		printf("%2x ", plaintext[i]);
 	}
 	printf("\n\n");	
 
@@ -55,26 +55,26 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 
 	// encryption
-	aes_encrypt_128(roundkeys, plain, cipher);
+	aes_encrypt_128(roundkeys, plaintext, ciphertext);
 	printf("Cipher text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		printf("%2x ", cipher[i]);
+		printf("%2x ", ciphertext[i]);
 	}
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		if ( cipher[i] != const_cipher[i] ) { break; }
+		if ( ciphertext[i] != const_cipher[i] ) { break; }
 	}
 	if ( BLOCK_SIZE_BYTE != i ) { printf("\nENCRYPT WRONG\n\n"); }
 	else { printf("\nENCRYPT CORRECT\n\n"); }
 
 
 	// decryption
-	aes_decrypt_128(roundkeys, cipher, cipher);
+	aes_decrypt_128(roundkeys, ciphertext, ciphertext);
 	printf("Plain text:\n");
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		printf("%2x ", cipher[i]);
+		printf("%2x ", ciphertext[i]);
 	}
 	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
-		if ( cipher[i] != plain[i] ) { break; }
+		if ( ciphertext[i] != plaintext[i] ) { break; }
 	}
 	if ( BLOCK_SIZE_BYTE != i ) { printf("\nDECRYPT WRONG\n\n"); }
 	else { printf("\nDECRYPT CORRECT\n\n"); }
