@@ -1,5 +1,7 @@
 ### AES-128
 
+[![Build Status](https://travis-ci.org/openluopworld/aes_128?branch=master)](https://travis-ci.org/openluopworld/aes_128)
+
 C implementation of AES-128.<br><br>
 
 ```C
@@ -28,7 +30,3 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
  */
 void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext);
 ```
-
-### TODO
-
-* Give a full test
