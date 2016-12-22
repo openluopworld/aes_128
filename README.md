@@ -1,6 +1,6 @@
 ### AES-128
 
-[![Build Status](https://travis-ci.org/openluopworld/aes_128)](https://travis-ci.org/openluopworld/aes_128)
+[![Build Status](https://travis-ci.org/openluopworld/aes_128.svg?branch=master)](https://travis-ci.org/openluopworld/aes_128)
 
 C implementation of AES-128.<br><br>
 
