@@ -16,9 +16,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define BLOCK_SIZE_BYTE	16
-#define ROUNDS			10	// 12, 14
-#define ROUND_KEY_SIZE	176	// AES-128 has 10 rounds, and there is a AddRoundKey before first round. (10+1)x16=176.
+#define AES_BLOCK_SIZE	    16
+#define AES_ROUNDS			10	// 12, 14
+#define AES_ROUND_KEY_SIZE	176	// AES-128 has 10 rounds, and there is a AddRoundKey before first round. (10+1)x16=176.
 
 /**
  * @purpose:			Key schedule for AES-128

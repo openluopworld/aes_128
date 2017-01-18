@@ -163,7 +163,7 @@ static void aes_enc_round(uint8_t *state, const uint8_t *roundkeys) {
 	uint8_t i;
 
 	shift_rows(state);
-	for (i = 0; i < BLOCK_SIZE_BYTE; ++i) {
+	for (i = 0; i < AES_BLOCK_SIZE; ++i) {
 		*(tmp+i) = SBOX[*(state+i)];
 	}
 	/*
@@ -182,7 +182,7 @@ static void aes_enc_round(uint8_t *state, const uint8_t *roundkeys) {
 	}
 
 	// add round keys
-	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		*(state+i) ^= *(roundkeys+i);
 	}
 }
@@ -194,7 +194,7 @@ static void aes_dec_round(uint8_t *state, const uint8_t *roundkeys) {
 	uint8_t t, u, v, w;
 	
 	// add round keys
-	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		*(tmp+i) = *(state+i) ^ *(roundkeys+i);
 	}
 	
@@ -218,7 +218,7 @@ static void aes_dec_round(uint8_t *state, const uint8_t *roundkeys) {
 	inv_shift_rows(state);
 	
 	// inverse sub
-	for (i = 0; i < BLOCK_SIZE_BYTE; i++) {
+	for (i = 0; i < AES_BLOCK_SIZE; i++) {
 		*(state+i) = INV_SBOX[*(state+i)];
 	}
 
@@ -245,7 +245,7 @@ void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys) {
 	}
 
 	last4bytes = roundkeys-4;
-	for (i = 0; i < ROUNDS; i++) {
+	for (i = 0; i < AES_ROUNDS; i++) {
 		// k0-k3 for next round
 		temp[3] = SBOX[*last4bytes++];
 		temp[0] = SBOX[*last4bytes++];
@@ -279,28 +279,28 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 
 	uint8_t i;
 
-	for ( i = 0; i < BLOCK_SIZE_BYTE; i++ ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; i++ ) {
 		ciphertext[i] = plaintext[i];
 	}
 
 	// first key eor
-	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		*(ciphertext+i) ^= *(roundkeys+i);
 	}
 	roundkeys += 16;
 
 	// 9 rounds
-	for (i = 1; i < ROUNDS; i++) {
+	for (i = 1; i < AES_ROUNDS; i++) {
 		aes_enc_round(ciphertext, roundkeys);
 		roundkeys += 16;
 	}
 	
 	// last round
-	for (i = 0; i < BLOCK_SIZE_BYTE; ++i) {
+	for (i = 0; i < AES_BLOCK_SIZE; ++i) {
 		*(ciphertext+i) = SBOX[*(ciphertext+i)];
 	}
 	shift_rows(ciphertext);
-	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		*(ciphertext+i) ^= *(roundkeys+i);
 	}
 }
@@ -309,29 +309,29 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 
 	uint8_t i;
 
-	for ( i = 0; i < BLOCK_SIZE_BYTE; i++ ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; i++ ) {
 		plaintext[i] = ciphertext[i];
 	}
 
 	roundkeys += 160;
 
 	// first round
-	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		*(plaintext+i) ^= *(roundkeys+i);
 	}
 	roundkeys -= 16;
 	inv_shift_rows(plaintext);
-	for (i = 0; i < BLOCK_SIZE_BYTE; ++i) {
+	for (i = 0; i < AES_BLOCK_SIZE; ++i) {
 		*(plaintext+i) = INV_SBOX[*(plaintext+i)];
 	}
 
-	for (i = 1; i < ROUNDS; i++) {
+	for (i = 1; i < AES_ROUNDS; i++) {
 		aes_dec_round(plaintext, roundkeys);
 		roundkeys -= 16;
 	}
 
 	// last add round key
-	for ( i = 0; i < BLOCK_SIZE_BYTE; ++i ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		*(plaintext+i) ^= *(roundkeys+i);
 	}
 
