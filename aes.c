@@ -95,6 +95,10 @@ static uint8_t mul(uint8_t a, uint8_t b) {
 
 }
 
+static inline uint8_t mul2(uint8_t a) {
+	return (a&0x80) ? ((a<<1)^0x1b) : (a<<1);
+}
+
 /**
  * @purpose:	ShiftRow
  * @descrption:
@@ -213,15 +217,10 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 	uint8_t tmp[16], t;
 	uint8_t i, j;
 
-	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-		ciphertext[i] = plaintext[i];
-	}
-
 	// first key eor
 	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-		*(ciphertext+i) ^= *(roundkeys+i);
+		*(ciphertext+i) = *(plaintext+i) ^ *roundkeys++;
 	}
-	roundkeys += 16;
 
 	// 9 rounds
 	for (j = 1; j < AES_ROUNDS; ++j) {
@@ -239,17 +238,17 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 		 */
 		for (i = 0; i < AES_BLOCK_SIZE; i+=4)  {
 			t = tmp[i] ^ tmp[i+1] ^ tmp[i+2] ^ tmp[i+3];
-			ciphertext[i]   = mul(tmp[i]   ^ tmp[i+1], 2) ^ tmp[i]   ^ t;
-			ciphertext[i+1] = mul(tmp[i+1] ^ tmp[i+2], 2) ^ tmp[i+1] ^ t;
-			ciphertext[i+2] = mul(tmp[i+2] ^ tmp[i+3], 2) ^ tmp[i+2] ^ t;
-			ciphertext[i+3] = mul(tmp[i+3] ^ tmp[i], 2)   ^ tmp[i+3] ^ t;
+			ciphertext[i]   = mul2(tmp[i]   ^ tmp[i+1]) ^ tmp[i]   ^ t;
+			ciphertext[i+1] = mul2(tmp[i+1] ^ tmp[i+2]) ^ tmp[i+1] ^ t;
+			ciphertext[i+2] = mul2(tmp[i+2] ^ tmp[i+3]) ^ tmp[i+2] ^ t;
+			ciphertext[i+3] = mul2(tmp[i+3] ^ tmp[i]  ) ^ tmp[i+3] ^ t;
 		}
 
 		// add round keys
 		for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-			*(ciphertext+i) ^= *(roundkeys+i);
+			*(ciphertext+i) ^= *roundkeys++;
 		}
-		roundkeys += 16;
+
 	}
 	
 	// last round
@@ -258,7 +257,7 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 	}
 	shift_rows(ciphertext);
 	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-		*(ciphertext+i) ^= *(roundkeys+i);
+		*(ciphertext+i) ^= *roundkeys++;
 	}
 
 }
@@ -269,15 +268,11 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 	uint8_t t, u, v, w;
 	uint8_t i, j;
 
-	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-		plaintext[i] = ciphertext[i];
-	}
-
 	roundkeys += 160;
 
 	// first round
 	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-		*(plaintext+i) ^= *(roundkeys+i);
+		*(plaintext+i) = *(plaintext+i) ^ *(roundkeys+i);
 	}
 	roundkeys -= 16;
 	inv_shift_rows(plaintext);
