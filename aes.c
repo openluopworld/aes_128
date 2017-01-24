@@ -106,24 +106,24 @@ static uint8_t mul(uint8_t a, uint8_t b) {
 static void shift_rows(uint8_t *state) {
 	uint8_t temp;
 	// row1
-	temp = *(state+1);
-	*(state+1) = *(state+5);
-	*(state+5) = *(state+9);
-	*(state+9) = *(state+13);
+	temp        = *(state+1);
+	*(state+1)  = *(state+5);
+	*(state+5)  = *(state+9);
+	*(state+9)  = *(state+13);
 	*(state+13) = temp;
 	// row2
-	temp = *(state+2);
-	*(state+2) = *(state+10);
+	temp        = *(state+2);
+	*(state+2)  = *(state+10);
 	*(state+10) = temp;
-	temp = *(state+6);
-	*(state+6) = *(state+14);
+	temp        = *(state+6);
+	*(state+6)  = *(state+14);
 	*(state+14) = temp;
 	// row3
-	temp = *(state+15);
+	temp        = *(state+15);
 	*(state+15) = *(state+11);
 	*(state+11) = *(state+7);
-	*(state+7) = *(state+3);
-	*(state+3) = temp;
+	*(state+7)  = *(state+3);
+	*(state+3)  = temp;
 }
 
 /**
@@ -137,91 +137,24 @@ static void shift_rows(uint8_t *state) {
 static void inv_shift_rows(uint8_t *state) {
 	uint8_t temp;
 	// row1
-	temp = *(state+13);
+	temp        = *(state+13);
 	*(state+13) = *(state+9);
-	*(state+9) = *(state+5);
-	*(state+5) = *(state+1);
-	*(state+1) = temp;
+	*(state+9)  = *(state+5);
+	*(state+5)  = *(state+1);
+	*(state+1)  = temp;
 	// row2
-	temp = *(state+14);
+	temp        = *(state+14);
 	*(state+14) = *(state+6);
-	*(state+6) = temp;
-	temp = *(state+10);
+	*(state+6)  = temp;
+	temp        = *(state+10);
 	*(state+10) = *(state+2);
-	*(state+2) = temp;
+	*(state+2)  = temp;
 	// row1
-	temp = *(state+3);
-	*(state+3) = *(state+7);
-	*(state+7) = *(state+11);
+	temp        = *(state+3);
+	*(state+3)  = *(state+7);
+	*(state+7)  = *(state+11);
 	*(state+11) = *(state+15);
 	*(state+15) = temp;
-}
-
-static void aes_enc_round(uint8_t *state, const uint8_t *roundkeys) {
-
-	uint8_t tmp[16], t;
-	uint8_t i;
-
-	shift_rows(state);
-	for (i = 0; i < AES_BLOCK_SIZE; ++i) {
-		*(tmp+i) = SBOX[*(state+i)];
-	}
-	/*
-	 * mix columns 
-	 * [02 03 01 01]   [s0  s4  s8  s12]
-	 * [01 02 03 01] . [s1  s5  s9  s13]
-	 * [01 01 02 03]   [s2  s6  s10 s14]
-	 * [03 01 01 02]   [s3  s7  s11 s15]
-	 */
-	for (i = 0; i < 4; ++i)  {
-		t = tmp[4*i+0] ^ tmp[4*i+1] ^ tmp[4*i+2] ^ tmp[4*i+3];
-		state[4*i+0] = mul(tmp[4*i+0] ^ tmp[4*i+1], 2) ^ tmp[4*i+0] ^ t;
-		state[4*i+1] = mul(tmp[4*i+1] ^ tmp[4*i+2], 2) ^ tmp[4*i+1] ^ t;
-		state[4*i+2] = mul(tmp[4*i+2] ^ tmp[4*i+3], 2) ^ tmp[4*i+2] ^ t;
-		state[4*i+3] = mul(tmp[4*i+3] ^ tmp[4*i+0], 2) ^ tmp[4*i+3] ^ t;
-	}
-
-	// add round keys
-	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-		*(state+i) ^= *(roundkeys+i);
-	}
-}
-
-static void aes_dec_round(uint8_t *state, const uint8_t *roundkeys) {
-
-	uint8_t tmp[16];
-	uint8_t i;
-	uint8_t t, u, v, w;
-	
-	// add round keys
-	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-		*(tmp+i) = *(state+i) ^ *(roundkeys+i);
-	}
-	
-	// inverse mix columns
-	// this method is from FELICS
-	for (i = 0; i < 4; ++i) {
-		t = tmp[4*i+3] ^ tmp[4*i+2];
-		u = tmp[4*i+1] ^ tmp[4*i+0];
-		v = t ^ u;
-		v = mul(0x09, v);
-		w = v ^ mul(tmp[4*i+2] ^ tmp[4*i+0], 0x04);
-		v = v ^ mul(tmp[4*i+3] ^ tmp[4*i+1], 0x04);
-		
-		state[4*i+3] = tmp[4*i+3] ^ v ^ mul(tmp[4*i+0] ^ tmp[4*i+3], 0x02);
-		state[4*i+2] = tmp[4*i+2] ^ w ^ mul(t,                       0x02);
-		state[4*i+1] = tmp[4*i+1] ^ v ^ mul(tmp[4*i+2] ^ tmp[4*i+1], 0x02);
-		state[4*i+0] = tmp[4*i+0] ^ w ^ mul(u,                       0x02);
-	}
-	
-	// inverse shift rows
-	inv_shift_rows(state);
-	
-	// inverse sub
-	for (i = 0; i < AES_BLOCK_SIZE; i++) {
-		*(state+i) = INV_SBOX[*(state+i)];
-	}
-
 }
 /* Static Functions End ------------------------------------------------------------------------------ */
 /* --------------------------------------------------------------------------------------------------- */
@@ -237,7 +170,7 @@ void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys) {
 	uint8_t *lastround;
 	uint8_t i;
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 4; ++i) {
 		*roundkeys++ = key[4*i+0];
 		*roundkeys++ = key[4*i+1];
 		*roundkeys++ = key[4*i+2];
@@ -245,7 +178,7 @@ void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys) {
 	}
 
 	last4bytes = roundkeys-4;
-	for (i = 0; i < AES_ROUNDS; i++) {
+	for (i = 0; i < AES_ROUNDS; ++i) {
 		// k0-k3 for next round
 		temp[3] = SBOX[*last4bytes++];
 		temp[0] = SBOX[*last4bytes++];
@@ -277,9 +210,10 @@ void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys) {
 
 void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t *ciphertext) {
 
-	uint8_t i;
+	uint8_t tmp[16], t;
+	uint8_t i, j;
 
-	for ( i = 0; i < AES_BLOCK_SIZE; i++ ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		ciphertext[i] = plaintext[i];
 	}
 
@@ -290,8 +224,31 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 	roundkeys += 16;
 
 	// 9 rounds
-	for (i = 1; i < AES_ROUNDS; i++) {
-		aes_enc_round(ciphertext, roundkeys);
+	for (j = 1; j < AES_ROUNDS; ++j) {
+
+		shift_rows(ciphertext);
+		for (i = 0; i < AES_BLOCK_SIZE; ++i) {
+			*(tmp+i) = SBOX[*(ciphertext+i)];
+		}
+		/*
+		 * mix columns 
+		 * [02 03 01 01]   [s0  s4  s8  s12]
+		 * [01 02 03 01] . [s1  s5  s9  s13]
+		 * [01 01 02 03]   [s2  s6  s10 s14]
+		 * [03 01 01 02]   [s3  s7  s11 s15]
+		 */
+		for (i = 0; i < AES_BLOCK_SIZE; i+=4)  {
+			t = tmp[i] ^ tmp[i+1] ^ tmp[i+2] ^ tmp[i+3];
+			ciphertext[i]   = mul(tmp[i]   ^ tmp[i+1], 2) ^ tmp[i]   ^ t;
+			ciphertext[i+1] = mul(tmp[i+1] ^ tmp[i+2], 2) ^ tmp[i+1] ^ t;
+			ciphertext[i+2] = mul(tmp[i+2] ^ tmp[i+3], 2) ^ tmp[i+2] ^ t;
+			ciphertext[i+3] = mul(tmp[i+3] ^ tmp[i], 2)   ^ tmp[i+3] ^ t;
+		}
+
+		// add round keys
+		for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
+			*(ciphertext+i) ^= *(roundkeys+i);
+		}
 		roundkeys += 16;
 	}
 	
@@ -303,13 +260,16 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		*(ciphertext+i) ^= *(roundkeys+i);
 	}
+
 }
 
 void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext) {
 
-	uint8_t i;
+	uint8_t tmp[16];
+	uint8_t t, u, v, w;
+	uint8_t i, j;
 
-	for ( i = 0; i < AES_BLOCK_SIZE; i++ ) {
+	for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
 		plaintext[i] = ciphertext[i];
 	}
 
@@ -325,9 +285,39 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 		*(plaintext+i) = INV_SBOX[*(plaintext+i)];
 	}
 
-	for (i = 1; i < AES_ROUNDS; i++) {
-		aes_dec_round(plaintext, roundkeys);
+	for (j = 1; j < AES_ROUNDS; ++j) {
+		
+		// add round keys
+		for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
+			*(tmp+i) = *(plaintext+i) ^ *(roundkeys+i);
+		}
+		
+		// inverse mix columns
+		// this method is from FELICS
+		for (i = 0; i < AES_BLOCK_SIZE; i+=4) {
+			t = tmp[i+3] ^ tmp[i+2];
+			u = tmp[i+1] ^ tmp[i];
+			v = t ^ u;
+			v = mul(0x09, v);
+			w = v ^ mul(tmp[i+2] ^ tmp[i],   0x04);
+			v = v ^ mul(tmp[i+3] ^ tmp[i+1], 0x04);
+			
+			plaintext[i+3] = tmp[i+3] ^ v ^ mul(tmp[i]   ^ tmp[i+3], 0x02);
+			plaintext[i+2] = tmp[i+2] ^ w ^ mul(t,                   0x02);
+			plaintext[i+1] = tmp[i+1] ^ v ^ mul(tmp[i+2] ^ tmp[i+1], 0x02);
+			plaintext[i]   = tmp[i]   ^ w ^ mul(u,                   0x02);
+		}
+		
+		// inverse shift rows
+		inv_shift_rows(plaintext);
+		
+		// inverse sub
+		for (i = 0; i < AES_BLOCK_SIZE; ++i) {
+			*(plaintext+i) = INV_SBOX[*(plaintext+i)];
+		}
+
 		roundkeys -= 16;
+
 	}
 
 	// last add round key
