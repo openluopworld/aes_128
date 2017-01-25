@@ -287,8 +287,13 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 			*(tmp+i) = *(plaintext+i) ^ *(roundkeys+i);
 		}
 		
-		// inverse mix columns
-		// this method is from FELICS
+		/*
+		 * inverse mix columns
+		 * [0e 0b 0d 09]   [s0  s4  s8  s12]
+		 * [09 0e 0b 0d] . [s1  s5  s9  s13]
+		 * [0d 09 0e 0b]   [s2  s6  s10 s14]
+		 * [0b 0d 09 0e]   [s3  s7  s11 s15]
+		 */
 		for (i = 0; i < AES_BLOCK_SIZE; i+=4) {
 			t = tmp[i+3] ^ tmp[i+2];
 			u = tmp[i+1] ^ tmp[i];
