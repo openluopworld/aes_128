@@ -8,6 +8,7 @@
  *
  * LuoPeng, luopeng@iie.ac.cn
  * Updated in Oct 2016
+ * Updated in Jan 2017, update muliple function on GF(2^8).
  *
  */
 #include <stdint.h>
