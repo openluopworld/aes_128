@@ -77,24 +77,6 @@ static uint8_t INV_SBOX[256] = {
  *
  * Multiply two numbers in the GF(2^8) finite field defined by the polynomial x^8 + x^4 + x^3 + x + 1 = 0
  */
-static uint8_t mul(uint8_t a, uint8_t b) {
-
-	uint8_t p = 0;
-
-	while (b) {
-		if (b & 1) { p ^= a; }
-		if (a & 0x80) {
-	                a = (a << 1) ^ 0x1b; 
-		} else {
-			a <<= 1;
-		}
-		b >>= 1;
-	}
-
-	return p;
-
-}
-
 static inline uint8_t mul2(uint8_t a) {
 	return (a&0x80) ? ((a<<1)^0x1b) : (a<<1);
 }
@@ -265,7 +247,7 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext) {
 
 	uint8_t tmp[16];
-	uint8_t t, u, v, w;
+	uint8_t t, u, v;
 	uint8_t i, j;
 
 	roundkeys += 160;
@@ -295,17 +277,18 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 		 * [0b 0d 09 0e]   [s3  s7  s11 s15]
 		 */
 		for (i = 0; i < AES_BLOCK_SIZE; i+=4) {
-			t = tmp[i+3] ^ tmp[i+2];
-			u = tmp[i+1] ^ tmp[i];
-			v = t ^ u;
-			v = mul(0x09, v);
-			w = v ^ mul(tmp[i+2] ^ tmp[i],   0x04);
-			v = v ^ mul(tmp[i+3] ^ tmp[i+1], 0x04);
-			
-			plaintext[i+3] = tmp[i+3] ^ v ^ mul(tmp[i]   ^ tmp[i+3], 0x02);
-			plaintext[i+2] = tmp[i+2] ^ w ^ mul(t,                   0x02);
-			plaintext[i+1] = tmp[i+1] ^ v ^ mul(tmp[i+2] ^ tmp[i+1], 0x02);
-			plaintext[i]   = tmp[i]   ^ w ^ mul(u,                   0x02);
+			t = tmp[i] ^ tmp[i+1] ^ tmp[i+2] ^ tmp[i+3];
+			plaintext[i]   = t ^ tmp[i]   ^ mul2(tmp[i]   ^ tmp[i+1]);
+			plaintext[i+1] = t ^ tmp[i+1] ^ mul2(tmp[i+1] ^ tmp[i+2]);
+			plaintext[i+2] = t ^ tmp[i+2] ^ mul2(tmp[i+2] ^ tmp[i+3]);
+			plaintext[i+3] = t ^ tmp[i+3] ^ mul2(tmp[i+3] ^ tmp[i]);
+			u = mul2(mul2(tmp[i]   ^ tmp[i+2]));
+			v = mul2(mul2(tmp[i+1] ^ tmp[i+3]));
+			t = mul2(u ^ v);
+			plaintext[i]   ^= t ^ u;
+			plaintext[i+1] ^= t ^ v;
+			plaintext[i+2] ^= t ^ u;
+			plaintext[i+3] ^= t ^ v;
 		}
 		
 		// inverse shift rows
