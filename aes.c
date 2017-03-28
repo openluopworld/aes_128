@@ -208,10 +208,10 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 	// 9 rounds
 	for (j = 1; j < AES_ROUNDS; ++j) {
 
-		shift_rows(ciphertext);
 		for (i = 0; i < AES_BLOCK_SIZE; ++i) {
 			*(tmp+i) = SBOX[*(ciphertext+i)];
 		}
+		shift_rows(tmp);
 		/*
 		 * mix columns 
 		 * [02 03 01 01]   [s0  s4  s8  s12]
