@@ -49,6 +49,9 @@ make
 
 If there is anything wrong or if you have any question, just make an issue or email me.
 
+## Extension
+The look-up-table implementation of AES is very fast. It can be seen in some famous projects.
+
 ## License
 
 > Copyright (c) 2017 LuoPeng
