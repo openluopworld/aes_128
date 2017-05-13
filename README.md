@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/openluopworld/aes_128.svg?branch=master)](https://travis-ci.org/openluopworld/aes_128) [![Coverity Scan Build Status](https://img.shields.io/coverity/scan/11502.svg)](https://scan.coverity.com/projects/openluopworld-aes_128)
 
-C implementation of AES-128. This code has been tested with GCC 4.8.4 and Valgrind-3.11.0.
+C implementation of AES-128. No modes are given. This code has been tested with GCC 4.8.4 and Valgrind-3.11.0.
 
 ## Usage
 
