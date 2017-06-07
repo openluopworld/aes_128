@@ -49,8 +49,12 @@ make
 
 If there is anything wrong or if you have any question, just make an issue or email me.
 
-## Extension
-The look-up-table implementation of AES is very fast. It can be seen in some famous projects.
+## Todo
+I do not like 'Todo', but...
+
++ Full unroll implementation
++ Look-up-table implementation
++ SIMD implementation, include SSE and AVX
 
 ## License
 
