@@ -50,11 +50,14 @@ make
 If there is anything wrong or if you have any question, just make an issue or email me.
 
 ## Todo
-'Todo' may always be 'Todo', so I do not like this word, but...
+'Todo' may always be 'To do', so I do not like this word, but...
 
-+ Full unroll implementation
-+ Look-up-table implementation
-+ SIMD implementation, include SSE and AVX
+* Implementation
+  + Full unroll implementation
+  + Look-up-table implementation
+  + SIMD implementation, include SSE and AVX
+* Modes
+  + ECB, CBC, CTR and XTS
 
 ## License
 
