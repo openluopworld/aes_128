@@ -57,6 +57,7 @@ If there is anything wrong or if you have any question, just make an issue or em
   + SIMD implementation, include SSE and AVX
 * Modes
   + ECB, CBC, CTR and XTS
+* Add speed test
 
 ## License
 
