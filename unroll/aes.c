@@ -162,7 +162,6 @@ void aes_key_schedule_128(const uint8_t *key, uint8_t *roundkeys) {
     shift_rows(ct, t);                 \
     add_round_key(ct, ct, rks);
 
-
 void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t *ciphertext) {
 
     uint8_t tmp[16], t;
@@ -185,6 +184,78 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 
 
 // decryption
+
+#define inv_add_round_key(in, out, rks) \
+	*out      = *in      ^ *rks,      *(out+1)  = *(in+1)  ^ *(rks+1),  *(out+2)  = *(in+2)  ^ *(rks+2),  *(out+3)  = *(in+3)  ^ *(rks+3);  \
+	*(out+4)  = *(in+4)  ^ *(rks+4),  *(out+5)  = *(in+5)  ^ *(rks+5),  *(out+6)  = *(in+6)  ^ *(rks+6),  *(out+7)  = *(in+7)  ^ *(rks+7);  \
+	*(out+8)  = *(in+8)  ^ *(rks+8),  *(out+9)  = *(in+9)  ^ *(rks+9),  *(out+10) = *(in+10) ^ *(rks+10), *(out+11) = *(in+11) ^ *(rks+11); \
+	*(out+12) = *(in+12) ^ *(rks+12), *(out+13) = *(in+13) ^ *(rks+13), *(out+14) = *(in+14) ^ *(rks+14), *(out+15) = *(in+15) ^ *(rks+15);
+
+#define inv_shift_rows(pt, t) \
+    t = *(pt+13); *(pt+13) = *(pt+9); *(pt+9)  = *(pt+5);  *(pt+5)  = *(pt+1);  *(pt+1)  = t; \
+    t = *(pt+14); *(pt+14) = *(pt+6); *(pt+6)  = t;                                           \
+    t = *(pt+10); *(pt+10) = *(pt+2); *(pt+2)  = t;                                           \
+    t = *(pt+3);  *(pt+3)  = *(pt+7); *(pt+7)  = *(pt+11); *(pt+11) = *(pt+15); *(pt+15) = t;
+
+#define inv_sub_bytes(pt)     \
+    *pt      = INV_SBOX[*pt],      *(pt+1)  = INV_SBOX[*(pt+1)],  *(pt+2)  = INV_SBOX[*(pt+2)],  *(pt+3)  = INV_SBOX[*(pt+3)];  \
+    *(pt+4)  = INV_SBOX[*(pt+4)],  *(pt+5)  = INV_SBOX[*(pt+5)],  *(pt+6)  = INV_SBOX[*(pt+6)],  *(pt+7)  = INV_SBOX[*(pt+7)];  \
+    *(pt+8)  = INV_SBOX[*(pt+8)],  *(pt+9)  = INV_SBOX[*(pt+9)],  *(pt+10) = INV_SBOX[*(pt+10)], *(pt+11) = INV_SBOX[*(pt+11)]; \
+    *(pt+12) = INV_SBOX[*(pt+12)], *(pt+13) = INV_SBOX[*(pt+13)], *(pt+14) = INV_SBOX[*(pt+14)], *(pt+15) = INV_SBOX[*(pt+15)];
+
+#define inv_mix_columns(pt, tmp, t, u, v) \
+    t     =  tmp[0] ^ tmp[1] ^ tmp[2] ^ tmp[3];                                                      \
+    pt[0] =  t ^ tmp[0] ^ mul2(tmp[0] ^ tmp[1]), pt[1] = t ^ tmp[1] ^ mul2(tmp[1] ^ tmp[2]);         \
+    pt[2] =  t ^ tmp[2] ^ mul2(tmp[2] ^ tmp[3]), pt[3] = t ^ tmp[3] ^ mul2(tmp[3] ^ tmp[0]);         \
+    u     =  mul2(mul2(tmp[0] ^ tmp[2])), v = mul2(mul2(tmp[1] ^ tmp[3])), t = mul2(u ^ v);          \
+    pt[0] ^= t ^ u, pt[1] ^= t ^ v, pt[2] ^= t ^ u, pt[3] ^= t ^ v;                                  \
+    t     =  tmp[4] ^ tmp[5] ^ tmp[6] ^ tmp[7];                                                      \
+    pt[4] =  t ^ tmp[4] ^ mul2(tmp[4] ^ tmp[5]), pt[5] = t ^ tmp[5] ^ mul2(tmp[5] ^ tmp[6]);         \
+    pt[6] =  t ^ tmp[6] ^ mul2(tmp[6] ^ tmp[7]), pt[7] = t ^ tmp[7] ^ mul2(tmp[7] ^ tmp[4]);         \
+    u     =  mul2(mul2(tmp[4] ^ tmp[6])), v = mul2(mul2(tmp[5] ^ tmp[7])), t = mul2(u ^ v);          \
+    pt[4] ^= t ^ u, pt[5] ^= t ^ v, pt[6] ^= t ^ u, pt[7] ^= t ^ v;                                  \
+    t     =  tmp[8] ^ tmp[9] ^ tmp[10] ^ tmp[11];                                                    \
+    pt[8] =  t ^ tmp[8] ^ mul2(tmp[8] ^ tmp[9]), pt[9] = t ^ tmp[9] ^ mul2(tmp[9] ^ tmp[10]);        \
+    pt[10] =  t ^ tmp[10] ^ mul2(tmp[10] ^ tmp[11]), pt[11] = t ^ tmp[11] ^ mul2(tmp[11] ^ tmp[8]);  \
+    u     =  mul2(mul2(tmp[8] ^ tmp[10])), v = mul2(mul2(tmp[9] ^ tmp[11])), t = mul2(u ^ v);        \
+    pt[8] ^= t ^ u, pt[9] ^= t ^ v, pt[10] ^= t ^ u, pt[11] ^= t ^ v;                                \
+    t     =  tmp[12] ^ tmp[13] ^ tmp[14] ^ tmp[15];                                                  \
+    pt[12] =  t ^ tmp[12] ^ mul2(tmp[12] ^ tmp[13]), pt[13] = t ^ tmp[13] ^ mul2(tmp[13] ^ tmp[14]); \
+    pt[14] =  t ^ tmp[14] ^ mul2(tmp[14] ^ tmp[15]), pt[15] = t ^ tmp[15] ^ mul2(tmp[15] ^ tmp[12]); \
+    u     =  mul2(mul2(tmp[12] ^ tmp[14])), v = mul2(mul2(tmp[13] ^ tmp[15])), t = mul2(u ^ v);      \
+    pt[12] ^= t ^ u, pt[13] ^= t ^ v, pt[14] ^= t ^ u, pt[15] ^= t ^ v;
+
+#define dec_first_round(ct, pt, rks, t) \
+    inv_add_round_key(ct, pt, rks);     \
+    rks -= 16;                          \
+    inv_shift_rows(pt, t);              \
+    inv_sub_bytes(pt);
+
+#define dec_one_round(pt, rks, tmp, t, u, v) \
+    inv_add_round_key(pt, tmp, rks);         \
+    roundkeys -= 16;                         \
+    inv_mix_columns(pt, tmp, t, u, v);       \
+    inv_shift_rows(pt, t);                   \
+    inv_sub_bytes(pt);
+    
 void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext) {
 
+    uint8_t tmp[16];
+    uint8_t t, u, v;
+
+    roundkeys += 160;
+    dec_first_round(ciphertext, plaintext, roundkeys, t);
+
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+    dec_one_round(plaintext, roundkeys, tmp, t, u, v);
+
+    inv_add_round_key(plaintext, plaintext, roundkeys);
+    
 }

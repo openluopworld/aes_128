@@ -128,7 +128,7 @@ static void inv_shift_rows(uint8_t *state) {
     temp        = *(state+10);
     *(state+10) = *(state+2);
     *(state+2)  = temp;
-    // row1
+    // row3
     temp        = *(state+3);
     *(state+3)  = *(state+7);
     *(state+7)  = *(state+11);
