@@ -239,7 +239,7 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 
     // first round
     for ( i = 0; i < AES_BLOCK_SIZE; ++i ) {
-        *(plaintext+i) = *(plaintext+i) ^ *(roundkeys+i);
+        *(plaintext+i) = *(ciphertext+i) ^ *(roundkeys+i);
     }
     roundkeys -= 16;
     inv_shift_rows(plaintext);
