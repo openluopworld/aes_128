@@ -53,7 +53,6 @@ If there is anything wrong or if you have any question, just make an issue or em
 'Todo' may always be 'To do', so I do not like this word, but...
 
 * Implementation
-  + Look-up-table implementation
   + SIMD implementation, include SSE and AVX
 * Modes
   + ECB, CBC, CTR and XTS
