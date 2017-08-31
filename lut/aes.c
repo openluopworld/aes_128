@@ -4,7 +4,7 @@
 
  * LuoPeng (luopengxq@gmail.com)
  * 2017.8.5
- * Modified 2017.8.31. Add the decryption lut implementation.
+ * Modified 2017.8.31. Add the decryption LUT implementation.
  */
 
 #include <stdint.h>
@@ -568,6 +568,8 @@ static const uint32_t D3[256] = {
 	0x7b6184cb, 0xd570b632, 0x48745c6c, 0xd04257b8, };
 
 /*
+ * This is for the Inverse MixColumns of round keys.
+ *
  * The values is [0x0b, 0x0d, 0x09, 0x0e].x
  * where x belongs to [0, 255]
  */
@@ -660,7 +662,7 @@ static uint8_t INV_SBOX[256] = {
 	0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d};
 
 /*
- * round constants
+ * Round constants
  */
 static uint8_t RC[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
 
@@ -752,6 +754,37 @@ void aes_encrypt_128(const uint8_t *roundkeys, const uint8_t *plaintext, uint8_t
 
 }
 
+
+/*
+ * Decryption steps
+ *
+ * Suppose:
+ *   IAdd -- Inverse AddRoundKey
+ *   IShf -- Inverse ShiftRows
+ *   ISub -- Inverse SubBytes
+ *   IMix -- Inverse MixColumns
+ *
+ * -----------------------------------------------------
+ *
+ *   IAdd           IAdd           IAdd           IAdd
+ *   IShf         --------       --------       --------
+ *   ISub         | IShf |       | ISub |       | ISub |
+ * --------       | ISub |       | IShf |       | IShf |
+ * | IAdd |       | IAdd |       | IAdd |       | IAdd |
+ * | IMix |   1   | IMix |   2   | IMix |   3   | IMix |
+ * | IShf | ----> -------- ----> -------- ----> --------
+ * | ISub |         IShf           IShf           IShf
+ * --------         ISub           ISub           ISub
+ *   IAdd           IAdd           IAdd           IAdd
+ *  
+ * Step 2 change the order of IShf and ISub. This can be done directly.
+ * Step 3 change the order of IAdd and IMix. Therefore, we add the table
+ *        TK0 for the round keys to do IMix. You can also use 4 tables
+ *        (util/dec_key_table.c can get the tables).
+ * -----------------------------------------------------
+ * 
+ */
+
 void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext) {    
     
     int i;
@@ -759,7 +792,7 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
     const uint32_t * ct  = (uint32_t*)ciphertext;
     uint32_t t0, t1, t2, t3, u0, u1, u2, u3;
 
-    // first Inverse AddRoundKey and Inverse ShiftRow
+    // first Inverse AddRoundKey
 
     t0  =  ct[0] ^ *( ((uint32_t*)roundkeys) + 40);
     t1  =  ct[1] ^ *( ((uint32_t*)roundkeys) + 41);
@@ -798,6 +831,7 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
         roundkeys -= 16;
     }
     
+    // last round: Inverse ShiftRows, Inverse SubBytes and Inverse AddRoundKey
     plaintext[0]  = INV_SBOX[(uint8_t)t0]       ^ *roundkeys++;
     plaintext[1]  = INV_SBOX[(uint8_t)(t3>>8)]  ^ *roundkeys++;
     plaintext[2]  = INV_SBOX[(uint8_t)(t2>>16)] ^ *roundkeys++;
@@ -816,71 +850,3 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
     plaintext[15] = INV_SBOX[t0>>24]            ^ *roundkeys++;
 
 }
-
-/*
-void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_t *plaintext) {    
-    
-    int i;
-
-    const uint32_t * ct  = (uint32_t*)ciphertext;
-    uint32_t t0, t1, t2, t3, u0, u1, u2, u3;
-
-    // first Inverse AddRoundKey and Inverse ShiftRow
-
-    u0  =  ct[0] ^ *( ((uint32_t*)roundkeys) + 40);
-    u1  =  ct[1] ^ *( ((uint32_t*)roundkeys) + 41);
-    u2  =  ct[2] ^ *( ((uint32_t*)roundkeys) + 42);
-    u3  =  ct[3] ^ *( ((uint32_t*)roundkeys) + 43);
-    t0  =  (u0&0x000000ff) ^ (u3&0x0000ff00) ^ (u2&0x00ff0000) ^ (u1&0xff000000);
-    t1  =  (u1&0x000000ff) ^ (u0&0x0000ff00) ^ (u3&0x00ff0000) ^ (u2&0xff000000);
-    t2  =  (u2&0x000000ff) ^ (u1&0x0000ff00) ^ (u0&0x00ff0000) ^ (u3&0xff000000);
-    t3  =  (u3&0x000000ff) ^ (u2&0x0000ff00) ^ (u1&0x00ff0000) ^ (u0&0xff000000);
-
-    roundkeys += 144;
-    for (i = 1; i < AES_ROUNDS; ++i) {
-        u0  = D0[(uint8_t)t0] ^ D1[(uint8_t)(t3>>8)] ^ D2[(uint8_t)(t2>>16)] ^ D3[t1>>24]
-            ^ IK0[roundkeys[0]]
-            ^ ((IK0[roundkeys[13]]<<8)  ^ (IK0[roundkeys[13]]>>24))
-            ^ ((IK0[roundkeys[10]]<<16) ^ (IK0[roundkeys[10]]>>16))
-            ^ ((IK0[roundkeys[7]]<<24)  ^ (IK0[roundkeys[7]]>>8));
-        u1  = D0[(uint8_t)t1] ^ D1[(uint8_t)(t0>>8)] ^ D2[(uint8_t)(t3>>16)] ^ D3[t2>>24]
-            ^ IK0[roundkeys[4]]
-            ^ ((IK0[roundkeys[1]]<<8)   ^ (IK0[roundkeys[1]]>>24))
-            ^ ((IK0[roundkeys[14]]<<16) ^ (IK0[roundkeys[14]]>>16))
-            ^ ((IK0[roundkeys[11]]<<24) ^ (IK0[roundkeys[11]]>>8));
-        u2  = D0[(uint8_t)t2] ^ D1[(uint8_t)(t1>>8)] ^ D2[(uint8_t)(t0>>16)] ^ D3[t3>>24]
-            ^ IK0[roundkeys[8]]
-            ^ ((IK0[roundkeys[5]]<<8)   ^ (IK0[roundkeys[5]]>>24))
-            ^ ((IK0[roundkeys[2]]<<16)  ^ (IK0[roundkeys[2]]>>16))
-            ^ ((IK0[roundkeys[15]]<<24) ^ (IK0[roundkeys[15]]>>8));
-        u3  = D0[(uint8_t)t3] ^ D1[(uint8_t)(t2>>8)] ^ D2[(uint8_t)(t1>>16)] ^ D3[t0>>24]
-            ^ IK0[roundkeys[12]]
-            ^ ((IK0[roundkeys[9]]<<8)   ^ (IK0[roundkeys[9]]>>24))
-            ^ ((IK0[roundkeys[6]]<<16)  ^ (IK0[roundkeys[6]]>>16))
-            ^ ((IK0[roundkeys[3]]<<24)  ^ (IK0[roundkeys[3]]>>8));
-        t0 = u0;
-        t1 = u1;
-        t2 = u2;
-        t3 = u3;
-        roundkeys -= 16;
-    }
-    
-    plaintext[0]  = INV_SBOX[(uint8_t)t0]       ^ *roundkeys++;
-    plaintext[1]  = INV_SBOX[(uint8_t)(t0>>8)]  ^ *roundkeys++;
-    plaintext[2]  = INV_SBOX[(uint8_t)(t0>>16)] ^ *roundkeys++;
-    plaintext[3]  = INV_SBOX[t0>>24]            ^ *roundkeys++;
-    plaintext[4]  = INV_SBOX[(uint8_t)t1]       ^ *roundkeys++;
-    plaintext[5]  = INV_SBOX[(uint8_t)(t1>>8)]  ^ *roundkeys++;
-    plaintext[6]  = INV_SBOX[(uint8_t)(t1>>16)] ^ *roundkeys++;
-    plaintext[7]  = INV_SBOX[t1>>24]            ^ *roundkeys++;
-    plaintext[8]  = INV_SBOX[(uint8_t)t2]       ^ *roundkeys++;
-    plaintext[9]  = INV_SBOX[(uint8_t)(t2>>8)]  ^ *roundkeys++;
-    plaintext[10] = INV_SBOX[(uint8_t)(t2>>16)] ^ *roundkeys++;
-    plaintext[11] = INV_SBOX[t2>>24]            ^ *roundkeys++;
-    plaintext[12] = INV_SBOX[(uint8_t)t3]       ^ *roundkeys++;
-    plaintext[13] = INV_SBOX[(uint8_t)(t3>>8)]  ^ *roundkeys++;
-    plaintext[14] = INV_SBOX[(uint8_t)(t3>>16)] ^ *roundkeys++;
-    plaintext[15] = INV_SBOX[t3>>24]            ^ *roundkeys++;
-
-}
-*/
