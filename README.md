@@ -40,6 +40,12 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 make
 ```
 
+### Implementation
++ Basic implementation: ./aes.c
++ Full unroll implementation: ./unroll/aes.c
++ Look up table implementation: ./lut/aes.c
+  - This code suppose the mechine is little-endian
+
 ## Dependencies
 
 + The code is written in standard C
