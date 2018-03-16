@@ -60,6 +60,7 @@ If there is anything wrong or if you have any question, just make an issue or em
 
 * Implementation
   + SIMD implementation, include SSE and AVX
+  + [AES NEON](http://www.luopeng.site/2018/aes-neon.html)
 * Modes
   + ECB, CBC, CTR and XTS
 * Add speed test
