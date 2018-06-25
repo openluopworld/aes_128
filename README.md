@@ -4,6 +4,20 @@
 
 C implementation of AES-128. No modes are given. This code has been tested with GCC 4.8.4 and Valgrind-3.11.0 on Intel-i5-3230.
 
+## How to read
+
+Reading of the paper [AES Proposal: Rijndael](https://csrc.nist.gov/csrc/media/projects/cryptographic-standards-and-guidelines/documents/aes-development/rijndael-ammended.pdf#page=3) first is recommended. If you care more about the implementation, Chapter 4 is enough.
+
++ Reference implementation: ./aes.c
+  - This should be read first. Since it is the reference implementation.
++ Full unroll implementation: ./unroll/aes.c
+  - The full unroll impelementation is easy to understand if you have read the reference one.
++ Look up table implementation: ./lut/aes.c
+  - Lut may be something difficult. But it is widely used in softwares.
+  - gen_dec_key_table.c, gen_enc_table.c and gen_dec_table.c are utils.
+  - This code suppose the mechine is little-endian.
++ If you still have interest, the advanced implementations with SIMD instructions or hardware instructions can be found in some famous projects.
+
 ## Usage
 
 ### Interface
@@ -39,12 +53,6 @@ void aes_decrypt_128(const uint8_t *roundkeys, const uint8_t *ciphertext, uint8_
 ```sh
 make
 ```
-
-### Implementation
-+ Basic implementation: ./aes.c
-+ Full unroll implementation: ./unroll/aes.c
-+ Look up table implementation: ./lut/aes.c
-  - This code suppose the mechine is little-endian
 
 ## Dependencies
 
