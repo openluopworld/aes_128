@@ -68,12 +68,12 @@ If there is anything wrong or if you have any question, just make an issue or em
 
 * Implementation
   + SIMD implementation, include SSE and AVX
-  + [AES NEON](http://www.luopeng.site/2018/aes-neon.html)
+  + [AES NEON](https://www.luopeng.site/2018/aes-neon.html)
 * Modes
   + ECB, CBC, CTR and XTS
 * Add speed test
 * Understand White-box Cryptography
-  + [White-Box Cryptography and an AES Implementation](http://link.springer.com/chapter/10.1007%2F3-540-36492-7_17?LI=true)
+  + [White-Box Cryptography and an AES Implementation](https://link.springer.com/chapter/10.1007%2F3-540-36492-7_17?LI=true)
   + [A Tutorial on White-Box AES](https://eprint.iacr.org/2013/104.pdf). May be better to understand.
 
 ## License
